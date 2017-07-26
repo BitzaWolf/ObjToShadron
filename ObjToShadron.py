@@ -41,6 +41,7 @@ while line[:2] == "vn":
 	normals.append(normal)
 	line = input.readline()
 
+# Skip over junk
 while line[:2] != "f ":
 	line = input.readline()
 
@@ -52,34 +53,96 @@ while line[:2] == "f ":
 	line = input.readline()
 
 # if faces are quads, transform to trianges
-if len(faces[0]) == 4:
-	quads = faces
-	faces = [] # Confirmed works
-	numFaces = len(quads)
-#
-#A  B
-#
-#C  D
-#
-#A C D B
+# A B C D
+# 
+# A  D
+# 
+# B  C
 #
 #Triangles...
-#A C D
-#A D B
-#
+# A B C
+# A C D
+# 
 #Quad to Triangles
 #v1 v2 v3
 #v1 v3 v4
-# 
-# End data for 1 object.
+if len(faces[0]) == 4:
+	quads = faces
+	faces = []
+	numFaces = len(quads)
+	for q in quads:
+		faces.append([q[0], q[1], q[2]])
+		faces.append([q[0], q[2], q[3]])
 
-
+# Shadron doesn't use faces, it uses literal verticies. So, for each face we have to break
+# up the v/t/n scheme into verticies, textures, and normals
+faceVerticies = []
+faceTextures = []
+faceNormals = []
+for f in faces:
+	for triplet in f:
+		values = re.findall(r'\d+', triplet)
+		faceVerticies.append(values[0])
+		if "//" in triplet:
+			faceNormals.append(values[1])
+		elif len(values) == 2:
+			faceTextures.append(values[1])
+		else:
+			faceTextures.append(values[1])
+			faceNormals.append(values[2])
 
 
 # Ready to output!
+output = open("test_Output.shadron", 'w')
+vertCount = str(len(faceVerticies))
+texCount = str(len(faceTextures))
+normCount = str(len(faceNormals))
+
 # 1) query for prefix to keep defines and function uniquely named
+prefix = "PREFIX_TEST" #input("Prefix for function names")
+
 # 2) #defines
+output.write("// Shadron model created using ObjToShadron by Bitzawolf\n")
+output.write("// http://www.bitzawolf.com\n")
+output.write("\n")
+output.write("#define " + prefix + "_PRIMITIVES triangles\n")
+output.write("#define " + prefix + "_VERTEX_COUNT " + vertCount + "\n")
+
 # 3) coord function -> a giant array of ALL vertices in order
+output.write("glsl vec3 " + prefix + "_Coord(int i) {\n")
+output.write("    vec3[" + vertCount + "] coords = vec3[" + vertCount + "](\n")
+for vertexIndex in faceVerticies:
+	vertex = verticies[int(vertexIndex) - 1]
+	output.write("        vec3(" + str(vertex[0]) + ", " + str(vertex[1]) + ", " + str(vertex[2]) + "),\n")
+output.write("    );\n")
+output.write("    return coords[i];\n")
+output.write("}\n")
+output.write("\n")
+
 # 4) texcoord function
+output.write("glsl vec2 " + prefix + "_TexCoord(int i) {\n")
+output.write("    vec2[" + texCount + "] texCoords = vec2[" + texCount + "](\n")
+for textureIndex in faceTextures:
+	uv = uvs[int(textureIndex) - 1]
+	output.write("        vec2(" + str(uv[0]) + ", " + str(uv[1]) + "),\n")
+output.write("    );\n")
+output.write("    return texCoords[i];\n")
+output.write("}\n")
+output.write("\n")
+
 # 5) normal function
+output.write("glsl vec3 " + prefix + "_Normal(int i) {\n")
+output.write("    vec3[" + normCount + "] normals = vec3[" + normCount + "](\n")
+for normalIndex in faceNormals:
+	normal = normals[int(normalIndex) - 1]
+	output.write("        vec3(" + str(normal[0]) + ", " + str(normal[1]) + ", " + str(normal[2]) + "),\n")
+output.write("    );\n")
+output.write("    return normals[i];\n")
+output.write("}\n")
+output.write("\n")
+
 # 6) vertext function -> calls coord, but returns a vec4
+output.write("glsl vec4 " + prefix + "_Vertex(int i) {\n")
+output.write("    return vec4(" + prefix + "_Coord(int i), 1.0);\n")
+output.write("}\n")
+output.write("\n")
