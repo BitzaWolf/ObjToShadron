@@ -7,3 +7,8 @@
 # 2) Write vertex coord function, based on faces and verts
 #    Write vertex texcoord function
 #    Write vertex normal function
+
+def pow(a, b):
+	return a ** b
+
+print(str(pow(2, 2)))

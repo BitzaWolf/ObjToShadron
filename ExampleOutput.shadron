@@ -1,0 +1,34 @@
+#include <sphere>
+#include <affine_transform>
+
+// Near/far values for projection (minimum and maximum draw distance)
+const float NEAR = 1.0/256.0, FAR = 256.0;
+
+cubemap _CubeMap = file("Sky.jpg");
+
+glsl struct _FragData
+{
+	vec3 normal;
+};
+
+glsl vec4 _Vertex(out _FragData fragmentData, int vertexIndex)
+{
+	vec3 vertex = sphereCoord<20, 20>(vertexIndex);
+    vertex = translate(vertex, vec3(0.0, 0.0, -10));
+	fragmentData.normal = sphereNormal<20, 20>(vertexIndex);
+
+    float fov = 0.5 * PI - atan(0.0625 * shadron_Mouse.z);
+    return projectPerspectiveHFOV(vertex, fov, NEAR, FAR);
+}
+
+glsl vec4 _Fragment(in _FragData fragmentData)
+{
+    vec4 color = texture(_CubeMap, fragmentData.normal);
+	return color;
+}
+
+model _Output :
+	fragment_data(_FragData),
+	vertex(_Vertex, SPHERE_PRIMITIVES, SPHERE_VERTEX_COUNT(20, 20)),
+	fragment(_Fragment),
+	multisample(4);
