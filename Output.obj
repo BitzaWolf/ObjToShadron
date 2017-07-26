@@ -1,0 +1,26 @@
+
+#define PRIMITIVES 
+#define VERTEX_COUNT 
+
+glsl vec3 cubeCoord(int i) {
+    vec3[36] coords = vec3[36](
+
+    );
+    return coords[i];
+}
+
+glsl vec3 cubeNormal(int i) {
+    vec3[6] normals = vec3[6](
+    );
+    return normals[i/6];
+}
+
+glsl vec2 cubeTexCoord(int i) {
+    vec2[36] texCoords = vec2[36](
+    );
+    return texCoords[i];
+}
+
+glsl vec4 cubeVertex(int i) {
+    return vec4(cubeCoord(i), 1.0);
+}

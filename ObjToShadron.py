@@ -8,7 +8,3 @@
 #    Write vertex texcoord function
 #    Write vertex normal function
 
-def pow(a, b):
-	return a ** b
-
-print(str(pow(2, 2)))
