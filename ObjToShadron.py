@@ -1,3 +1,5 @@
+import re
+
 # 0) Read in all the verticies. 1-based index.
 #    Read in all tex coords
 #    Read in all normal coords
@@ -9,18 +11,51 @@
 #    Write vertex normal function
 
 input = open("Input.obj", 'r')
+line = input.readline()
 
-line = input.readline();
-# if line starts with 'v'
+# Look for verticies
+while line[0] != 'v':
+	line = input.readline()
+
 # while line starts with 'v'...
 #		store vertex, next 3 inputs are x,y,z
+verticies = []
+while line[:2] == "v ":
+	vertex = re.findall(r'-?\d+\.\d+', line)
+	verticies.append(vertex)
+	line = input.readline()
+
 # while line start with 'vt'...
 #		store texcoord, next 2 inputs are u, v
+uvs = []
+while line[:2] == "vt":
+	uv = re.findall(r'-?\d+\.\d+', line)
+	uvs.append(uv)
+	line = input.readline()
+
 # while line starts with 'vn'
 #		store texnormal, next 3 inputs are x, y, z
-# ... junk
-# if 'f' has 3 verts -> Triangles, if 4 -> Quads
+normals = []
+while line[:2] == "vn":
+	normal = re.findall(r'-?\d+\.\d+', line)
+	normals.append(normal)
+	line = input.readline()
+
+while line[:2] != "f ":
+	line = input.readline()
+
 # while line starts with 'f'
+faces = []
+while line[:2] == "f ":
+	face = re.findall(r'\d+\/?\d*\/?\d*', line)
+	faces.append(face)
+	line = input.readline()
+
+# if faces are quads, transform to trianges
+if len(faces[0]) == 4:
+	quads = faces
+	faces = [] # Confirmed works
+	numFaces = len(quads)
 #
 #A  B
 #
