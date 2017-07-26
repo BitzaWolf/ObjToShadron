@@ -98,6 +98,9 @@ vertCount = str(len(faceVerticies))
 texCount = str(len(faceTextures))
 normCount = str(len(faceNormals))
 
+# TODO
+# - Fix fencepost problem. arrays end with a comma, and they shouldn't
+
 # 1) query for prefix to keep defines and function uniquely named
 prefix = "PREFIX_TEST" #input("Prefix for function names")
 
@@ -143,6 +146,6 @@ output.write("\n")
 
 # 6) vertext function -> calls coord, but returns a vec4
 output.write("glsl vec4 " + prefix + "_Vertex(int i) {\n")
-output.write("    return vec4(" + prefix + "_Coord(int i), 1.0);\n")
+output.write("    return vec4(" + prefix + "_Coord(i), 1.0);\n")
 output.write("}\n")
 output.write("\n")
