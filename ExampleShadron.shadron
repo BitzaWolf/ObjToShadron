@@ -1,4 +1,4 @@
-#include "test_Output.shadron"
+#include "Output.shadron"
 #include <affine_transform>
 #define PI 3.14
 
@@ -14,10 +14,11 @@ glsl struct _FragData
 
 glsl vec4 _Vertex(out _FragData fragmentData, int vertexIndex)
 {
-	vec3 vertex = PREFIX_TEST_Coord(vertexIndex);
-	vertex = rotateX(vertex, shadron_Mouse.y * PI);
-    vertex = translate(vertex, vec3(0.0, 0.0, -10));
-	fragmentData.texCoord = PREFIX_TEST_TexCoord(vertexIndex);
+	vec3 vertex = CUSTOM_Coord(vertexIndex);
+	vertex = rotateY(vertex, shadron_Mouse.x / 100);
+	vertex = rotateX(vertex, shadron_Mouse.y / 100);
+    vertex = translate(vertex, vec3(0.0, -7.0, -30));
+	fragmentData.texCoord = CUSTOM_TexCoord(vertexIndex);
 
     float fov = 0.5 * PI - atan(0.0625 * shadron_Mouse.z);
     return projectPerspectiveHFOV(vertex, fov, NEAR, FAR);
@@ -31,6 +32,6 @@ glsl vec4 _Fragment(in _FragData fragmentData)
 
 model _Output :
 	fragment_data(_FragData),
-	vertex(_Vertex, PREFIX_TEST_PRIMITIVES, PREFIX_TEST_VERTEX_COUNT),
+	vertex(_Vertex, CUSTOM_PRIMITIVES, CUSTOM_VERTEX_COUNT),
 	fragment(_Fragment),
 	multisample(4);

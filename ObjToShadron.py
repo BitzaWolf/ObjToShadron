@@ -93,16 +93,20 @@ for f in faces:
 
 
 # Ready to output!
-output = open("test_Output.shadron", 'w')
+output = open("Output.shadron", 'w')
 vertCount = str(len(faceVerticies))
 texCount = str(len(faceTextures))
 normCount = str(len(faceNormals))
 
 # TODO
 # - Fix fencepost problem. arrays end with a comma, and they shouldn't
+# - Fix input problem
+# - Don't print a normals function (nor UVs) if no UV/Normal data
+# - Optimize. Instead of printing dup verts, implement a function system to pull verts like an OBJ file...
 
 # 1) query for prefix to keep defines and function uniquely named
-prefix = "PREFIX_TEST" #input("Prefix for function names")
+#prefix = input('Prefix:')
+prefix = "CUSTOM";
 
 # 2) #defines
 output.write("// Shadron model created using ObjToShadron by Bitzawolf\n")
