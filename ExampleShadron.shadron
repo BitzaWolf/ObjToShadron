@@ -1,16 +1,19 @@
 #include "Output.shadron"
 #include <affine_transform>
 #define PI 3.14
+#define CAMERA_DIR vec3(0, 0, -1)
 
 // Near/far values for projection (minimum and maximum draw distance)
 const float NEAR = 1.0/256.0, FAR = 256.0;
 
-image text = file("ExampleTexture.png");
+cubemap _CubeMap = file("Sky.jpg");
 
 glsl struct _FragData
 {
-	vec2 texCoord;
+	vec3 norm;
+	vec3 viewDir;
 };
+
 
 glsl vec4 _Vertex(out _FragData fragmentData, int vertexIndex)
 {
@@ -18,7 +21,8 @@ glsl vec4 _Vertex(out _FragData fragmentData, int vertexIndex)
 	vertex = rotateY(vertex, shadron_Mouse.x / 100);
 	vertex = rotateX(vertex, shadron_Mouse.y / 100);
     vertex = translate(vertex, vec3(0.0, -7.0, -30));
-	fragmentData.texCoord = CUSTOM_TexCoord(vertexIndex);
+	fragmentData.norm = CUSTOM_Normal(vertexIndex);
+	fragmentData.viewDir = vertex;
 
     float fov = 0.5 * PI - atan(0.0625 * shadron_Mouse.z);
     return projectPerspectiveHFOV(vertex, fov, NEAR, FAR);
@@ -26,12 +30,35 @@ glsl vec4 _Vertex(out _FragData fragmentData, int vertexIndex)
 
 glsl vec4 _Fragment(in _FragData fragmentData)
 {
-    vec4 color = texture(text, fragmentData.texCoord);
+	vec3 refracted = refract(normalize(fragmentData.viewDir), normalize(fragmentData.norm), 1.5);
+    vec4 color = texture(_CubeMap, fragmentData.norm);
+	color.a = 0.5;
 	return color;
 }
 
-model _Output :
+model image _Wolf :
 	fragment_data(_FragData),
 	vertex(_Vertex, CUSTOM_PRIMITIVES, CUSTOM_VERTEX_COUNT),
 	fragment(_Fragment),
-	multisample(4);
+	multisample(4),
+	dimensions(1024, 1024);
+
+glsl vec4 _imageFragment(vec2 fragCoord)
+{
+	vec4 wolf = texture(_Wolf, fragCoord);
+
+	vec3 cam = rotateY(CAMERA_DIR, shadron_Mouse.x / 100);
+	vec3 localRight = normalize(cross(cam, vec3(0, 1, 0)));
+
+	fragCoord -= 0.5;
+	vec3 cubeSampler =
+		cam +
+		fragCoord.x * localRight +
+		fragCoord.y * vec3(0, 1, 0);
+	vec4 sky = texture(_CubeMap, cubeSampler);
+
+	return mix(sky, wolf, wolf.a);
+}
+
+image _Output = glsl(_imageFragment, sizeof(_Wolf));
+	
