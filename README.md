@@ -6,6 +6,9 @@ out a Shadron file. The file is ready for use as an #include inside another
 shadron script. Simply use it like you would with the default library's Cube or
 Sphere models.
 
+# Example
+![Example Image](https://github.com/BitzaWolf/ObjToShadron/blob/master/Example.PNG)
+
 # Shadron?
 Shadron is a software tool that makes it easy to write and play with GLSL shaders.
 
