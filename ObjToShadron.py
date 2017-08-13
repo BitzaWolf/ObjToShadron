@@ -101,8 +101,6 @@ normCount = str(len(faceNormals))
 # TODO
 # - Fix fencepost problem. arrays end with a comma, and they shouldn't
 # - Fix input problem
-# - Don't print a normals function (nor UVs) if no UV/Normal data
-# - Optimize. Instead of printing dup verts, implement a function system to pull verts like an OBJ file...
 
 # 1) query for prefix to keep defines and function uniquely named
 #prefix = input('Prefix:')
