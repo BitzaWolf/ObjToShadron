@@ -10,12 +10,12 @@ import re
 #    Write vertex texcoord function
 #    Write vertex normal function
 
-input = open("Input.obj", 'r')
-line = input.readline()
+fileIn = open("Input.obj", 'r')
+line = fileIn.readline()
 
 # Look for verticies
 while line[0] != 'v':
-	line = input.readline()
+	line = fileIn.readline()
 
 # while line starts with 'v'...
 #		store vertex, next 3 inputs are x,y,z
@@ -23,7 +23,7 @@ verticies = []
 while line[:2] == "v ":
 	vertex = re.findall(r'-?\d+\.\d+', line)
 	verticies.append(vertex)
-	line = input.readline()
+	line = fileIn.readline()
 
 # while line start with 'vt'...
 #		store texcoord, next 2 inputs are u, v
@@ -31,7 +31,7 @@ uvs = []
 while line[:2] == "vt":
 	uv = re.findall(r'-?\d+\.\d+', line)
 	uvs.append(uv)
-	line = input.readline()
+	line = fileIn.readline()
 
 # while line starts with 'vn'
 #		store texnormal, next 3 inputs are x, y, z
@@ -39,18 +39,18 @@ normals = []
 while line[:2] == "vn":
 	normal = re.findall(r'-?\d+\.\d+', line)
 	normals.append(normal)
-	line = input.readline()
+	line = fileIn.readline()
 
 # Skip over junk
 while line[:2] != "f ":
-	line = input.readline()
+	line = fileIn.readline()
 
 # while line starts with 'f'
 faces = []
 while line[:2] == "f ":
 	face = re.findall(r'\d+\/?\d*\/?\d*', line)
 	faces.append(face)
-	line = input.readline()
+	line = fileIn.readline()
 
 # if faces are quads, transform to trianges
 # A B C D
@@ -98,13 +98,8 @@ vertCount = str(len(faceVerticies))
 texCount = str(len(faceTextures))
 normCount = str(len(faceNormals))
 
-# TODO
-# - Fix fencepost problem. arrays end with a comma, and they shouldn't
-# - Fix input problem
-
 # 1) query for prefix to keep defines and function uniquely named
-#prefix = input('Prefix:')
-prefix = "CUSTOM";
+prefix = input('Prefix: ')
 
 # 2) #defines
 output.write("// Shadron model created using ObjToShadron by Bitzawolf\n")
@@ -116,9 +111,14 @@ output.write("#define " + prefix + "_VERTEX_COUNT " + vertCount + "\n")
 # 3) coord function -> a giant array of ALL vertices in order
 output.write("glsl vec3 " + prefix + "_Coord(int i) {\n")
 output.write("    vec3[" + vertCount + "] coords = vec3[" + vertCount + "](\n")
+vectors = []
 for vertexIndex in faceVerticies:
 	vertex = verticies[int(vertexIndex) - 1]
-	output.write("        vec3(" + str(vertex[0]) + ", " + str(vertex[1]) + ", " + str(vertex[2]) + "),\n")
+	vectors.append("        vec3(" + str(vertex[0]) + ", " + str(vertex[1]) + ", " + str(vertex[2]) + ")")
+connector = ",\n"
+vectors = connector.join(vectors)
+output.write(vectors)
+output.write("\n")
 output.write("    );\n")
 output.write("    return coords[i];\n")
 output.write("}\n")
@@ -127,9 +127,14 @@ output.write("\n")
 # 4) texcoord function
 output.write("glsl vec2 " + prefix + "_TexCoord(int i) {\n")
 output.write("    vec2[" + texCount + "] texCoords = vec2[" + texCount + "](\n")
+vectors = []
 for textureIndex in faceTextures:
 	uv = uvs[int(textureIndex) - 1]
-	output.write("        vec2(" + str(uv[0]) + ", " + str(uv[1]) + "),\n")
+	vectors.append("        vec2(" + str(uv[0]) + ", " + str(uv[1]) + ")")
+connector = ",\n"
+vectors = connector.join(vectors)
+output.write(vectors)
+output.write("\n")
 output.write("    );\n")
 output.write("    return texCoords[i];\n")
 output.write("}\n")
@@ -138,9 +143,13 @@ output.write("\n")
 # 5) normal function
 output.write("glsl vec3 " + prefix + "_Normal(int i) {\n")
 output.write("    vec3[" + normCount + "] normals = vec3[" + normCount + "](\n")
+vectors = []
 for normalIndex in faceNormals:
 	normal = normals[int(normalIndex) - 1]
-	output.write("        vec3(" + str(normal[0]) + ", " + str(normal[1]) + ", " + str(normal[2]) + "),\n")
+	vectors.append("        vec3(" + str(normal[0]) + ", " + str(normal[1]) + ", " + str(normal[2]) + ")")
+vectors = connector.join(vectors)
+output.write(vectors)
+output.write("\n")
 output.write("    );\n")
 output.write("    return normals[i];\n")
 output.write("}\n")
