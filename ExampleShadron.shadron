@@ -1,3 +1,8 @@
+/**
+ * This is an example Shadron project file to show how to use
+ * the tool. Run this file in Shadron to preview the example
+ */
+
 #include "Output.shadron"
 #include <affine_transform>
 #define PI 3.14
@@ -9,17 +14,17 @@ image _Texture = file("ExampleTexture.png");
 
 glsl struct _FragData
 {
-	vec2 uv;
+    vec2 uv;
 };
 
 
 glsl vec4 _Vertex(out _FragData fragmentData, int vertexIndex)
 {
-	vec3 vertex = CUSTOM_Coord(vertexIndex);
-	vertex = rotateY(vertex, shadron_Mouse.x / 100);
-	vertex = rotateX(vertex, shadron_Mouse.y / 100);
+    vec3 vertex = CUSTOM_Coord(vertexIndex);
+    vertex = rotateY(vertex, shadron_Mouse.x / 100);
+    vertex = rotateX(vertex, shadron_Mouse.y / 100);
     vertex = translate(vertex, vec3(0.0, -7.0, -30));
-	fragmentData.uv = CUSTOM_TexCoord(vertexIndex);
+    fragmentData.uv = CUSTOM_TexCoord(vertexIndex);
 
     float fov = 0.5 * PI - atan(0.0625 * shadron_Mouse.z);
     return projectPerspectiveHFOV(vertex, fov, NEAR, FAR);
@@ -28,12 +33,12 @@ glsl vec4 _Vertex(out _FragData fragmentData, int vertexIndex)
 glsl vec4 _Fragment(in _FragData fragmentData)
 {
     vec4 color = texture(_Texture, fragmentData.uv);
-	color.a = 1;
-	return color;
+    color.a = 1;
+    return color;
 }
 
 model _Output :
-	fragment_data(_FragData),
-	vertex(_Vertex, CUSTOM_PRIMITIVES, CUSTOM_VERTEX_COUNT),
-	fragment(_Fragment),
-	multisample(4);
+    fragment_data(_FragData),
+    vertex(_Vertex, CUSTOM_PRIMITIVES, CUSTOM_VERTEX_COUNT),
+    fragment(_Fragment),
+    multisample(4);
