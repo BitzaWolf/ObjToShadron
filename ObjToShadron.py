@@ -103,6 +103,7 @@ prefix = input('Prefix: ')
 
 # 2) #defines
 output.write("// Shadron model created using ObjToShadron by Bitzawolf\n")
+output.write("// https://github.com/BitzaWolf/ObjToShadron\n")
 output.write("// http://www.bitzawolf.com\n")
 output.write("\n")
 output.write("#define " + prefix + "_PRIMITIVES triangles\n")
