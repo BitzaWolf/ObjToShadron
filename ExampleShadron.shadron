@@ -15,16 +15,17 @@ image _Texture = file("ExampleTexture.png");
 glsl struct _FragData
 {
     vec2 uv;
+	vec3 norm;
 };
 
-
-glsl vec4 _Vertex(out _FragData fragmentData, int vertexIndex)
+glsl vec4 _Vertex(out _FragData fragmentData, in WOLF_VertexData modelIn)
 {
-    vec3 vertex = Wolf_Coord(vertexIndex);
+    vec3 vertex = modelIn.coord;
     vertex = rotateY(vertex, shadron_Mouse.x / 100);
     vertex = rotateX(vertex, shadron_Mouse.y / 100);
     vertex = translate(vertex, vec3(0.0, -7.0, -30));
-    fragmentData.uv = Wolf_TexCoord(vertexIndex);
+    fragmentData.uv = modelIn.texCoord;
+    fragmentData.norm = modelIn.normal;
 
     float fov = 0.5 * PI - atan(0.0625 * shadron_Mouse.z);
     return projectPerspectiveHFOV(vertex, fov, NEAR, FAR);
@@ -39,6 +40,6 @@ glsl vec4 _Fragment(in _FragData fragmentData)
 
 model _Output :
     fragment_data(_FragData),
-    vertex(_Vertex, Wolf_PRIMITIVES, Wolf_VERTEX_COUNT),
+    vertex(_Vertex, triangles, WOLF_VertList),
     fragment(_Fragment),
     multisample(4);

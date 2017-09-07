@@ -1,14 +1,15 @@
 import re
+import sys
 
-# 0) Read in all the verticies. 1-based index.
+print("**********************************\n")
+print("* Welcome to Object-to-Shadron!  *\n")
+print("**********************************\n\n")
+
+# 1) Read in all the verticies. 1-based index.
 #    Read in all tex coords
 #    Read in all normal coords
 #    Read in faces
-# 1) Determine if quads or trigs, 4 or 3 verts per face
-#    Write num of verts
-# 2) Write vertex coord function, based on faces and verts
-#    Write vertex texcoord function
-#    Write vertex normal function
+# 2) Write Vertex Data and VertexList
 
 fileIn = open("Input.obj", 'r')
 line = fileIn.readline()
@@ -52,27 +53,11 @@ while line[:2] == "f ":
 	faces.append(face)
 	line = fileIn.readline()
 
-# if faces are quads, transform to trianges
-# A B C D
-# 
-# A  D
-# 
-# B  C
-#
-#Triangles...
-# A B C
-# A C D
-# 
-#Quad to Triangles
-#v1 v2 v3
-#v1 v3 v4
-if len(faces[0]) == 4:
-	quads = faces
-	faces = []
-	numFaces = len(quads)
-	for q in quads:
-		faces.append([q[0], q[1], q[2]])
-		faces.append([q[0], q[2], q[3]])
+# If faces don't have 3 verts, quit now.
+if len(faces[0]) != 3:
+	print("Faces are not made from triangles.\n")
+	print("Please re-export .obj file model with just triangles.")
+	sys.exit()
 
 # Shadron doesn't use faces, it uses literal verticies. So, for each face we have to break
 # up the v/t/n scheme into verticies, textures, and normals
@@ -94,70 +79,63 @@ for f in faces:
 
 # Ready to output!
 output = open("Output.shadron", 'w')
-vertCount = str(len(faceVerticies))
-texCount = str(len(faceTextures))
-normCount = str(len(faceNormals))
+vertCount = len(faceVerticies)
+texCount = len(faceTextures)
+normCount = len(faceNormals)
+hasTex = texCount != 0
+hasNorm = normCount != 0
 
 # 1) query for prefix to keep defines and function uniquely named
 prefix = input('Prefix: ')
 
-# 2) #defines
+# 2) Shameless plug
 output.write("// Shadron model created using ObjToShadron by Bitzawolf\n")
 output.write("// https://github.com/BitzaWolf/ObjToShadron\n")
 output.write("// http://www.bitzawolf.com\n")
 output.write("\n")
-output.write("#define " + prefix + "_PRIMITIVES triangles\n")
-output.write("#define " + prefix + "_VERTEX_COUNT " + vertCount + "\n")
 
-# 3) coord function -> a giant array of ALL vertices in order
-output.write("glsl vec3 " + prefix + "_Coord(int i) {\n")
-output.write("    vec3[" + vertCount + "] coords = vec3[" + vertCount + "](\n")
-vectors = []
+# 3) Write Vertex Struct
+output.write("glsl struct " + prefix + "_VertexData {\n")
+output.write("    vec3 coord;\n")
+if hasTex:
+	output.write("    vec2 texCoord;\n")
+if hasNorm:
+	output.write("    vec3 normal;\n")
+output.write("};\n\n")
+output.write("vertex_list " + prefix + "_VertexData " + prefix + "_VertList = {\n")
+
+# 4) Gather array of verticies based on faces
+vectorsVerticies = []
 for vertexIndex in faceVerticies:
 	vertex = verticies[int(vertexIndex) - 1]
-	vectors.append("        vec3(" + str(vertex[0]) + ", " + str(vertex[1]) + ", " + str(vertex[2]) + ")")
-connector = ",\n"
-vectors = connector.join(vectors)
-output.write(vectors)
-output.write("\n")
-output.write("    );\n")
-output.write("    return coords[i];\n")
-output.write("}\n")
-output.write("\n")
+	vectorsVerticies.append(str(vertex[0]) + ", " + str(vertex[1]) + ", " + str(vertex[2]))
 
-# 4) texcoord function
-output.write("glsl vec2 " + prefix + "_TexCoord(int i) {\n")
-output.write("    vec2[" + texCount + "] texCoords = vec2[" + texCount + "](\n")
-vectors = []
+# 5) Gather array of texture coords
+vectorsTextures = []
 for textureIndex in faceTextures:
 	uv = uvs[int(textureIndex) - 1]
-	vectors.append("        vec2(" + str(uv[0]) + ", " + str(uv[1]) + ")")
+	vectorsTextures.append(str(uv[0]) + ", " + str(uv[1]))
+
+# 6) Gather array of normal coords
+vectorsNormals = []
+for normalIndex in faceNormals:
+	normal = normals[int(normalIndex) - 1]
+	vectorsNormals.append(str(normal[0]) + ", " + str(normal[1]) + ", " + str(normal[2]))
+
+# 7) Append 'em all and stuff it into the list!
+vectors = []
+for index in range(0, vertCount):
+    string = "    " + vectorsVerticies[index]
+    if hasTex:
+	    string = string + ", " + vectorsTextures[index]
+    if hasNorm:
+        string = string + ", " + vectorsNormals[index]
+    vectors.append(string)
+
 connector = ",\n"
 vectors = connector.join(vectors)
 output.write(vectors)
-output.write("\n")
-output.write("    );\n")
-output.write("    return texCoords[i];\n")
-output.write("}\n")
-output.write("\n")
 
-# 5) normal function
-output.write("glsl vec3 " + prefix + "_Normal(int i) {\n")
-output.write("    vec3[" + normCount + "] normals = vec3[" + normCount + "](\n")
-vectors = []
-for normalIndex in faceNormals:
-	normal = normals[int(normalIndex) - 1]
-	vectors.append("        vec3(" + str(normal[0]) + ", " + str(normal[1]) + ", " + str(normal[2]) + ")")
-vectors = connector.join(vectors)
-output.write(vectors)
+# 8) Cleanup
 output.write("\n")
-output.write("    );\n")
-output.write("    return normals[i];\n")
-output.write("}\n")
-output.write("\n")
-
-# 6) vertext function -> calls coord, but returns a vec4
-output.write("glsl vec4 " + prefix + "_Vertex(int i) {\n")
-output.write("    return vec4(" + prefix + "_Coord(i), 1.0);\n")
-output.write("}\n")
-output.write("\n")
+output.write("};")
